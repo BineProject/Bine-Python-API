@@ -1,9 +1,7 @@
 from __future__ import annotations
+from os import stat
 
 import typing
-
-import json
-import time
 
 import mysql.connector
 
@@ -11,9 +9,12 @@ import mysql.connector
 class SQLBasedHandler:
     def __init__(self, schema: str = "bine") -> None:
         self._schema = schema
-        self.con = self.__create_db_connection()
 
+    def init_db(self) -> None:
         with self.con.cursor() as cur:
+            cur.execute(f"CREATE DATABASE IF NOT EXISTS {self._schema}")
+            cur.execute(f"USE {self._schema}")
+
             cur.execute(
                 "CREATE TABLE IF NOT EXISTS MetaData("
                 " name VARCHAR(100) NOT NULL, "
@@ -28,28 +29,13 @@ class SQLBasedHandler:
 
         self.commit()
 
-    def __create_db_connection(self) -> mysql.connector.MySQLConnection:
-        print("Creating a new connection to MySQL database")
-        cfg = json.load(open("config.json"))
-        while True:
-            try:
-                con = mysql.connector.connect(
-                    host=cfg["database"]["host"],
-                    user=cfg["database"]["user"],
-                    password=cfg["database"]["password"],
-                )
-            except Exception as e:
-                print("Could not connect to the database:", e)
-                print("will try to connect in 5 seconds...")
-                time.sleep(5)
-            else:
-                break
+    @staticmethod
+    def _create_db_connection() -> mysql.connector.MySQLConnection:
+        raise NotImplementedError
 
-        with con.cursor() as cur:
-            cur.execute(f"CREATE DATABASE IF NOT EXISTS {self._schema}")
-            cur.execute(f"USE {self._schema}")
-
-        return con
+    @property
+    def con(self) -> mysql.connector.MySQLConnection:
+        return self._create_db_connection()
 
     def __add_feature(
         self, name: str, decorator_type: typing.Type[SQLBasedFeature]
@@ -241,3 +227,47 @@ class BineMarketFeature(SQLBasedFeature):
 class BineBaseSQLHandler(SQLBasedHandler):
     items: BineItemFeature
     market: BineMarketFeature
+
+
+try:
+    import flask
+    from flask import current_app
+except ModuleNotFoundError:
+
+    class FlaskBasedSQLHandler(SQLBasedHandler):
+        def __new__(cls) -> FlaskBasedSQLHandler:
+            raise ModuleNotFoundError("No installed Flask found.")
+
+        @staticmethod
+        def _create_db_connection() -> mysql.connector.MySQLConnection:
+            raise ModuleNotFoundError("No installed Flask found.")
+
+    class FlaskBineBaseSQLHandler(FlaskBasedSQLHandler, BineBaseSQLHandler):
+        def __new__(cls) -> FlaskBineBaseSQLHandler:
+            raise ModuleNotFoundError("No installed Flask found.")
+
+        @staticmethod
+        def _create_db_connection() -> mysql.connector.MySQLConnection:
+            raise ModuleNotFoundError("No installed Flask found.")
+
+
+else:
+
+    class FlaskBasedSQLHandler(SQLBasedHandler):  # type: ignore
+        @staticmethod
+        def _create_db_connection() -> mysql.connector.MySQLConnection:
+            return mysql.connector.connect(
+                host=current_app.config["MYSQL_DATABASE_HOST"],
+                user=current_app.config["MYSQL_DATABASE_USER"],
+                password=current_app.config["MYSQL_DATABASE_PASSWORD"],
+                database=current_app.config["MYSQL_DATABASE_DB"],
+            )
+
+        @property
+        def con(self) -> mysql.connector.MySQLConnection:
+            if not hasattr(flask.g, "db"):
+                flask.g.db = self._create_db_connection()
+            return flask.g.db
+
+    class FlaskBineBaseSQLHandler(FlaskBasedSQLHandler, BineBaseSQLHandler):  # type: ignore
+        ...
