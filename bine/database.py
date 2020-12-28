@@ -14,6 +14,7 @@ class ConnectionData(typing.TypedDict):
 
 class SQLBasedHandler:
     connection_data: typing.Optional[ConnectionData] = None
+    __connection = None
 
     def __init__(self, schema: str = "bine") -> None:
         self._schema = schema
@@ -44,7 +45,8 @@ class SQLBasedHandler:
     def _create_db_connection(cls) -> mysql.connector.MySQLConnection:
         if cls.connection_data is not None:
             try:
-                return mysql.connector.connect(**cls.connection_data)
+                cls.__connection = mysql.connector.connect(**cls.connection_data)
+                return cls.__connection
             except mysql.connector.errors.DatabaseError as e:
                 raise ConnectionRefusedError(*e.args)
         raise NotImplementedError
