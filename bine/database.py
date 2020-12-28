@@ -1,12 +1,20 @@
 from __future__ import annotations
-from os import stat
 
 import typing
 
 import mysql.connector
 
 
+class ConnectionData(typing.TypedDict):
+    host: str
+    user: str
+    password: str
+    database: str
+
+
 class SQLBasedHandler:
+    connection_data: typing.Optional[ConnectionData]
+
     def __init__(self, schema: str = "bine") -> None:
         self._schema = schema
 
@@ -29,8 +37,10 @@ class SQLBasedHandler:
 
         self.commit()
 
-    @staticmethod
-    def _create_db_connection() -> mysql.connector.MySQLConnection:
+    @classmethod
+    def _create_db_connection(cls) -> mysql.connector.MySQLConnection:
+        if cls.connection_data is not None:
+            return mysql.connector.connect(**cls.connection_data)
         raise NotImplementedError
 
     @property
@@ -238,24 +248,24 @@ except ModuleNotFoundError:
         def __new__(cls) -> FlaskBasedSQLHandler:
             raise ModuleNotFoundError("No installed Flask found.")
 
-        @staticmethod
-        def _create_db_connection() -> mysql.connector.MySQLConnection:
+        @classmethod
+        def _create_db_connection(cls) -> mysql.connector.MySQLConnection:
             raise ModuleNotFoundError("No installed Flask found.")
 
     class FlaskBineBaseSQLHandler(FlaskBasedSQLHandler, BineBaseSQLHandler):
         def __new__(cls) -> FlaskBineBaseSQLHandler:
             raise ModuleNotFoundError("No installed Flask found.")
 
-        @staticmethod
-        def _create_db_connection() -> mysql.connector.MySQLConnection:
+        @classmethod
+        def _create_db_connection(cls) -> mysql.connector.MySQLConnection:
             raise ModuleNotFoundError("No installed Flask found.")
 
 
 else:
 
     class FlaskBasedSQLHandler(SQLBasedHandler):  # type: ignore
-        @staticmethod
-        def _create_db_connection() -> mysql.connector.MySQLConnection:
+        @classmethod
+        def _create_db_connection(cls) -> mysql.connector.MySQLConnection:
             return mysql.connector.connect(
                 host=current_app.config["MYSQL_DATABASE_HOST"],
                 user=current_app.config["MYSQL_DATABASE_USER"],
