@@ -14,7 +14,7 @@ class ConnectionData(typing.TypedDict):
 
 class SQLBasedHandler:
     connection_data: typing.Optional[ConnectionData] = None
-    __connections: typing.List[mysql.connector.MySQLConnection] = []
+    __con__: mysql.connector.MySQLConnection
 
     def __init__(self, schema: str = "bine") -> None:
         self._schema = schema
@@ -43,12 +43,13 @@ class SQLBasedHandler:
 
     @classmethod
     def _create_db_connection(cls) -> mysql.connector.MySQLConnection:
-        if cls.connection_data is not None:
+        if not hasattr(cls, "__con__"):
             try:
-                cls.__connections.append(mysql.connector.connect(**cls.connection_data))
-                return cls.__connections[-1]
+                cls.__con__ = mysql.connector.connect(**cls.connection_data)
             except mysql.connector.errors.DatabaseError as e:
                 raise ConnectionRefusedError(*e.args)
+            else:
+                return cls.__con__
         raise NotImplementedError
 
     @property
