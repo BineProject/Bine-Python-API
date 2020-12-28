@@ -43,7 +43,10 @@ class SQLBasedHandler:
     @classmethod
     def _create_db_connection(cls) -> mysql.connector.MySQLConnection:
         if cls.connection_data is not None:
-            return mysql.connector.connect(**cls.connection_data)
+            try:
+                return mysql.connector.connect(**cls.connection_data)
+            except mysql.connector.errors.DatabaseError as e:
+                raise ConnectionRefusedError(*e.args)
         raise NotImplementedError
 
     @property
