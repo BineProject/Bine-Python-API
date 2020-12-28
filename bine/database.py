@@ -31,12 +31,12 @@ class SQLBasedHandler:
                 ")"
             )
 
-            for name, type_hint in typing.get_type_hints(self.__class__).items():
-                try:
-                    if issubclass(type_hint, SQLBasedFeature):
-                        self.__add_feature(name, type_hint)
-                except TypeError:
-                    pass
+        for name, type_hint in typing.get_type_hints(self.__class__).items():
+            try:
+                if issubclass(type_hint, SQLBasedFeature):
+                    self.__add_feature(name, type_hint)
+            except TypeError:
+                pass
 
         self.commit()
 
