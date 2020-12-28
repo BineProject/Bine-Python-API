@@ -48,9 +48,7 @@ class SQLBasedHandler:
                 cls.__con__ = mysql.connector.connect(**cls.connection_data)
             except mysql.connector.errors.DatabaseError as e:
                 raise ConnectionRefusedError(*e.args)
-            else:
-                return cls.__con__
-        raise NotImplementedError
+        return cls.__con__
 
     @property
     def con(self) -> mysql.connector.MySQLConnection:
