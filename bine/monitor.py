@@ -89,9 +89,7 @@ class ContractMonitor:
 
     def __on_next_block_added(self, block_data):
         self._last_block_data = block_data
-        print(
-            f"{f'[{self.__class__.__name__}]'.ljust(24)} New block added: {block_data['number']}"
-        )
+        print(f"New block added: {block_data['number']}")
         self._on_next_block_added(block_data)
 
     def process_event(self, event: Event, callback: typing.Callable) -> None:
