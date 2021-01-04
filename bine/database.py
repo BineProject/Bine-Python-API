@@ -13,7 +13,7 @@ class ConnectionData(typing.TypedDict):
 
 
 class SQLBasedHandler:
-    connection_data: typing.Optional[ConnectionData] = None
+    connection_data: ConnectionData = {}
     __con__: mysql.connector.MySQLConnection
 
     def __init__(self, schema: str = "bine") -> None:

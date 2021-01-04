@@ -64,14 +64,13 @@ class ContractMonitor:
         while True:
             try:
                 self.web3.eth.defaultAccount = self.web3.eth.accounts[0]  # type: ignore
-            except:
+            except:  # TODO
                 print("Ganache is not running, trying again in 5 seconds")
                 time.sleep(5)
             else:
                 break
         self.from_block = from_block
         self.deployed_contract_address = contract_address
-        contract_abi = contract_abi
 
         # Fetch deployed contract reference
         self.contract = self.web3.eth.contract(
@@ -83,6 +82,7 @@ class ContractMonitor:
 
         # Block number -> event hash -> event data
         self.events: typing.Dict[int, typing.Dict[str, Event]] = {}
+        self.filters: typing.Dict[str, typing.Any]
 
     def _create_filter(self, event: str, *args, **kwargs) -> IEventFilter:
         return getattr(self.contract.events, event).createFilter(*args, **kwargs)
@@ -163,10 +163,10 @@ class ContractMonitor:
         return self._last_block_data
 
     def _on_next_block_added(self, block_data) -> None:
-        ...
+        pass
 
     def _after_new_events_called(self) -> None:
-        ...
+        pass
 
     def _on_syncing_completed(self) -> None:
-        ...
+        pass

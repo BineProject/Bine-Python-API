@@ -8,3 +8,4 @@ from .database import (
     FlaskBasedSQLHandler,
     FlaskBineBaseSQLHandler,
 )
+from .context_editor import BineContextEditor
