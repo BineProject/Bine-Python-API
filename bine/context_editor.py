@@ -31,13 +31,10 @@ class BineContextEditor:
     def transfer_item(
         self, to: str, amount: int, transfer_from: str, item_id: int
     ) -> None:
-        _from: str = transfer_from
-        _id: int = item_id
-
-        if int(_from, base=16) != 0x0:
-            self.db_handler.items.remove(_id, _from, amount)
+        if int(transfer_from, base=16) != 0x0:
+            self.db_handler.items.remove(item_id, transfer_from, amount)
         if int(to, base=16) != 0x0:
-            self.db_handler.items.add(_id, to, amount)
+            self.db_handler.items.add(item_id, to, amount)
         self.db_handler.commit()
 
     def place_lot(self, owner: str, item_id: int, price: int, amount: int) -> int:
